@@ -54,6 +54,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </Link>
               );
             })}
+            
+            <button
+              onClick={handleSignOut}
+              className="w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+            >
+              <LogOut className="h-5 w-5 text-muted-foreground group-hover:text-destructive" />
+              Sign Out
+            </button>
           </nav>
 
           <div className="border-t p-4">
@@ -84,15 +92,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             />
           </div>
           <div className="flex items-center gap-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-muted-foreground hover:text-destructive gap-2"
-              onClick={handleSignOut}
-            >
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </Button>
             <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary">
               <Bell className="h-5 w-5" />
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background"></span>
