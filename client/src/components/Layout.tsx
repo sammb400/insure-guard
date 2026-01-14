@@ -10,9 +10,15 @@ import {
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
+
+  const handleSignOut = () => {
+    // Logic-less, just redirect to landing
+    setLocation("/landing");
+  };
 
   const navItems = [
     { label: "Dashboard", icon: LayoutDashboard, href: "/" },
@@ -78,6 +84,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             />
           </div>
           <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-muted-foreground hover:text-destructive gap-2"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </Button>
             <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary">
               <Bell className="h-5 w-5" />
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background"></span>
