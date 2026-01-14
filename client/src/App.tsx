@@ -8,10 +8,16 @@ import Dashboard from "@/pages/Dashboard";
 import Clients from "@/pages/Clients";
 import Policies from "@/pages/Policies";
 import Settings from "@/pages/Settings";
+import Landing from "@/pages/Landing";
+import Login from "@/pages/Login";
+import Signup from "@/pages/Signup";
 
 function Router() {
   return (
     <Switch>
+      <Route path="/landing" component={Landing} />
+      <Route path="/login" component={Login} />
+      <Route path="/signup" component={Signup} />
       <Route path="/" component={Dashboard} />
       <Route path="/clients" component={Clients} />
       <Route path="/policies" component={Policies} />
