@@ -6,8 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useTheme } from "@/hooks/use-theme";
+import { Moon, Sun, Monitor } from "lucide-react";
 
 export default function Settings() {
+  const { theme, setTheme } = useTheme();
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -19,8 +23,8 @@ export default function Settings() {
         <Tabs defaultValue="account" className="space-y-6">
           <TabsList>
             <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="appearance">Appearance</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
           
           <TabsContent value="account" className="space-y-6">
@@ -50,6 +54,46 @@ export default function Settings() {
                 </div>
                 <div className="flex justify-end">
                   <Button>Save Changes</Button>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="appearance">
+            <Card>
+              <CardHeader>
+                <CardTitle>Appearance</CardTitle>
+                <CardDescription>Customize how InsureGuard looks on your device.</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="space-y-4">
+                  <Label>Theme Mode</Label>
+                  <div className="grid grid-cols-3 gap-4">
+                    <Button 
+                      variant={theme === "light" ? "default" : "outline"} 
+                      className="flex flex-col gap-2 h-20"
+                      onClick={() => setTheme("light")}
+                    >
+                      <Sun className="h-5 w-5" />
+                      <span>Light</span>
+                    </Button>
+                    <Button 
+                      variant={theme === "dark" ? "default" : "outline"} 
+                      className="flex flex-col gap-2 h-20"
+                      onClick={() => setTheme("dark")}
+                    >
+                      <Moon className="h-5 w-5" />
+                      <span>Dark</span>
+                    </Button>
+                    <Button 
+                      variant={theme === "system" ? "default" : "outline"} 
+                      className="flex flex-col gap-2 h-20"
+                      onClick={() => setTheme("system")}
+                    >
+                      <Monitor className="h-5 w-5" />
+                      <span>System</span>
+                    </Button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

@@ -27,13 +27,17 @@ function Router() {
   );
 }
 
+import { ThemeProvider } from "@/hooks/use-theme";
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Router />
-        <Toaster />
-      </TooltipProvider>
+      <ThemeProvider defaultTheme="system" storageKey="insure-guard-theme">
+        <TooltipProvider>
+          <Router />
+          <Toaster />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }
