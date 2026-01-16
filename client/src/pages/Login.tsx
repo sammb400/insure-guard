@@ -15,14 +15,14 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-background p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <div className="inline-flex items-center justify-center bg-primary p-3 rounded-2xl mb-4">
             <ShieldCheck className="h-8 w-8 text-primary-foreground" />
           </div>
-          <h2 className="text-3xl font-extrabold text-slate-900">Welcome Back</h2>
-          <p className="mt-2 text-slate-600">Enter your credentials to access your portal</p>
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-foreground">Welcome Back</h2>
+          <p className="mt-2 text-slate-600 dark:text-muted-foreground">Enter your credentials to access your portal</p>
         </div>
 
         <Card className="shadow-xl border-border/40">
@@ -39,7 +39,7 @@ export default function Login() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Button variant="link" className="p-0 h-auto text-xs" type="button">Forgot password?</Button>
+                  <Button variant="ghost" className="p-0 h-auto text-xs" type="button">Forgot password?</Button>
                 </div>
                 <Input id="password" type="password" required />
               </div>
@@ -55,10 +55,10 @@ export default function Login() {
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                <span className="bg-background dark:bg-card px-2 text-muted-foreground">Or continue with</span>
               </div>
             </div>
-            <p className="text-center text-sm text-slate-600">
+            <p className="text-center text-sm text-slate-600 dark:text-muted-foreground">
               Don't have an account?{" "}
               <Link href="/signup" className="text-primary font-semibold hover:underline">
                 Create an account

@@ -15,14 +15,14 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-background p-4">
       <div className="w-full max-w-md space-y-8">
         <div className="text-center">
           <div className="inline-flex items-center justify-center bg-primary p-3 rounded-2xl mb-4">
             <ShieldCheck className="h-8 w-8 text-primary-foreground" />
           </div>
-          <h2 className="text-3xl font-extrabold text-slate-900">Start Your Journey</h2>
-          <p className="mt-2 text-slate-600">Join 5,000+ agents using InsureFlow</p>
+          <h2 className="text-3xl font-extrabold text-slate-900 dark:text-foreground">Start Your Journey</h2>
+          <p className="mt-2 text-slate-600 dark:text-muted-foreground">Join 5,000+ agents using InsureFlow</p>
         </div>
 
         <Card className="shadow-xl border-border/40">
@@ -57,7 +57,7 @@ export default function Signup() {
             </form>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <p className="text-center text-sm text-slate-600">
+            <p className="text-center text-sm text-slate-600 dark:text-muted-foreground">
               Already have an account?{" "}
               <Link href="/login" className="text-primary font-semibold hover:underline">
                 Log in
