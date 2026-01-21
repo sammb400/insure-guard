@@ -22,7 +22,7 @@ import { useEffect } from "react";
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [avatar, setAvatar] = useState("");
 
   useEffect(() => {
@@ -38,9 +38,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     fetchAvatar();
   }, [user]);
 
-  const handleSignOut = () => {
-    // Logic-less, just redirect to landing
-    setLocation("/landing");
+  const handleSignOut = async () => {
+    try {
+      await logout();
+      setLocation("/");
+    } catch (error) {
+      console.error("Failed to sign out", error);
+    }
   };
 
   const navItems = [
