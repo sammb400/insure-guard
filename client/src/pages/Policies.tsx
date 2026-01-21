@@ -2,6 +2,7 @@ import Layout from "@/components/Layout";
 import { useData } from "@/lib/DataContext";
 import { CreatePolicyDialog } from "@/components/CreatePolicyDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { PolicyDetailsDialog } from "@/components/PolicyDetailsDialog";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -16,6 +17,17 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Policy } from "@/lib/DataContext";
 
 const PolicyIcon = ({ type }: { type: string }) => {
   switch (type.toLowerCase()) {
@@ -28,10 +40,14 @@ const PolicyIcon = ({ type }: { type: string }) => {
 };
 
 export default function Policies() {
-  const { policies, clients, isLoading } = useData();
+  const { policies, clients, isLoading, updatePolicy, deletePolicy } = useData();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [policyToEdit, setPolicyToEdit] = useState<Policy | null>(null);
+  const [policyToDelete, setPolicyToDelete] = useState<Policy | null>(null);
+  const [policyToView, setPolicyToView] = useState<Policy | null>(null);
+  const [policyToRenew, setPolicyToRenew] = useState<Policy | null>(null);
 
   const filteredPolicies = policies?.filter(policy => {
     const matchesSearch = policy.policyNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -41,6 +57,24 @@ export default function Policies() {
     const matchesStatus = statusFilter === "all" || policy.status === statusFilter;
     return matchesSearch && matchesType && matchesStatus;
   });
+
+  const handleDelete = async () => {
+    if (policyToDelete) {
+      await deletePolicy(policyToDelete.id);
+      setPolicyToDelete(null);
+    }
+  };
+
+  const handleRenew = async () => {
+    if (policyToRenew) {
+      // Extend by 1 year
+      const currentExp = new Date(policyToRenew.expirationDate);
+      const newExp = new Date(currentExp.setFullYear(currentExp.getFullYear() + 1));
+      
+      await updatePolicy(policyToRenew.id, { expirationDate: newExp.toISOString().split('T')[0] });
+      setPolicyToRenew(null);
+    }
+  };
 
   return (
     <Layout>
@@ -142,9 +176,10 @@ export default function Policies() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
-                      <DropdownMenuItem>Edit Policy</DropdownMenuItem>
-                      <DropdownMenuItem>Renew</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setPolicyToView(policy)}>View Details</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setPolicyToEdit(policy)}>Edit Policy</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setPolicyToRenew(policy)}>Renew</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => setPolicyToDelete(policy)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </CardHeader>
@@ -181,6 +216,50 @@ export default function Policies() {
             </div>
           )}
         </div>
+
+        <CreatePolicyDialog 
+          open={!!policyToEdit} 
+          onOpenChange={(open) => !open && setPolicyToEdit(null)}
+          policy={policyToEdit || undefined}
+        />
+
+        <PolicyDetailsDialog 
+          open={!!policyToView}
+          onOpenChange={(open) => !open && setPolicyToView(null)}
+          policy={policyToView}
+        />
+
+        <AlertDialog open={!!policyToDelete} onOpenChange={(open) => !open && setPolicyToDelete(null)}>
+          <AlertDialogContent className="sm:max-w-[500px] !fixed !left-[50%] !top-[50%] !translate-x-[-50%] !translate-y-[-50%] z-50">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the policy.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <AlertDialog open={!!policyToRenew} onOpenChange={(open) => !open && setPolicyToRenew(null)}>
+          <AlertDialogContent className="sm:max-w-[500px] !fixed !left-[50%] !top-[50%] !translate-x-[-50%] !translate-y-[-50%] z-50">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Renew Policy?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will extend the policy expiration date by 1 year.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleRenew}>Confirm Renewal</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );

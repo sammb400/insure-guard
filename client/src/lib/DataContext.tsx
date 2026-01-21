@@ -1,6 +1,6 @@
 import { createContext, useContext, ReactNode } from "react";
 import { useDashboardStats } from "@/hooks/use-dashboard";
-import { usePolicies, useCreatePolicy } from "@/hooks/use-policies";
+import { usePolicies, useCreatePolicy, useUpdatePolicy, useDeletePolicy } from "@/hooks/use-policies";
 import { useClients, useCreateClient, useUpdateClient, useDeleteClient } from "@/hooks/use-clients";
 
 export interface DashboardStats {
@@ -42,6 +42,8 @@ interface DataContextType {
   updateClient: (id: string, data: Partial<Omit<Client, "id">>) => Promise<void>;
   deleteClient: (id: string) => Promise<void>;
   addPolicy: (policy: Omit<Policy, "id">) => Promise<void>;
+  updatePolicy: (id: string, data: Partial<Omit<Policy, "id">>) => Promise<void>;
+  deletePolicy: (id: string) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
@@ -54,6 +56,8 @@ const DataContext = createContext<DataContextType>({
   updateClient: async () => {},
   deleteClient: async () => {},
   addPolicy: async () => {},
+  updatePolicy: async () => {},
+  deletePolicy: async () => {},
   refreshData: async () => {},
 });
 
@@ -66,6 +70,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
   const updateClientMutation = useUpdateClient();
   const deleteClientMutation = useDeleteClient();
   const createPolicyMutation = useCreatePolicy();
+  const updatePolicyMutation = useUpdatePolicy();
+  const deletePolicyMutation = useDeletePolicy();
 
   const refreshData = async () => {
     await Promise.all([
@@ -95,6 +101,16 @@ export function DataProvider({ children }: { children: ReactNode }) {
     await refetchStats();
   };
 
+  const updatePolicy = async (id: string, data: Partial<Omit<Policy, "id">>) => {
+    await updatePolicyMutation.mutateAsync({ id, ...data });
+    await refetchStats();
+  };
+
+  const deletePolicy = async (id: string) => {
+    await deletePolicyMutation.mutateAsync(id);
+    await refetchStats();
+  };
+
   const isLoading = statsLoading || policiesLoading || clientsLoading;
 
   return (
@@ -107,6 +123,8 @@ export function DataProvider({ children }: { children: ReactNode }) {
       updateClient,
       deleteClient,
       addPolicy,
+      updatePolicy,
+      deletePolicy,
       refreshData 
     }}>
       {children}

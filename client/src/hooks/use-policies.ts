@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { db, auth } from "@/lib/firebase";
-import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { collection, addDoc, getDocs, query, where, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { Policy } from "@/lib/DataContext";
 
 export function usePolicies() {
@@ -26,6 +26,33 @@ export function useCreatePolicy() {
       const data = { ...policy, userId: auth.currentUser?.uid };
       const docRef = await addDoc(collection(db, "policies"), data);
       return { id: docRef.id, ...data };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["policies"] });
+    }
+  });
+}
+
+export function useUpdatePolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }: Partial<Policy> & { id: string }) => {
+      const docRef = doc(db, "policies", id);
+      await updateDoc(docRef, data);
+      return { id, ...data };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["policies"] });
+    }
+  });
+}
+
+export function useDeletePolicy() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await deleteDoc(doc(db, "policies", id));
+      return id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["policies"] });
