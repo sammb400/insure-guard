@@ -1,50 +1,62 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { api, buildUrl, type ClientInput } from "@shared/routes";
+import { db, auth } from "@/lib/firebase";
+import { collection, addDoc, getDocs, query, orderBy, doc, updateDoc, deleteDoc, where } from "firebase/firestore";
+import { Client } from "@/lib/DataContext";
 
 export function useClients() {
   return useQuery({
-    queryKey: [api.clients.list.path],
+    queryKey: ["clients", auth.currentUser?.uid],
     queryFn: async () => {
-      const res = await fetch(api.clients.list.path);
-      if (!res.ok) throw new Error("Failed to fetch clients");
-      return api.clients.list.responses[200].parse(await res.json());
+      if (!auth.currentUser) return [];
+      const q = query(
+        collection(db, "clients"), 
+        where("userId", "==", auth.currentUser.uid)
+      );
+      const snapshot = await getDocs(q);
+      const clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as unknown as Client[];
+      return clients.sort((a, b) => a.name.localeCompare(b.name));
     },
-  });
-}
-
-export function useClient(id: number) {
-  return useQuery({
-    queryKey: [api.clients.get.path, id],
-    queryFn: async () => {
-      const url = buildUrl(api.clients.get.path, { id });
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch client");
-      return api.clients.get.responses[200].parse(await res.json());
-    },
-    enabled: !!id,
+    enabled: !!auth.currentUser,
   });
 }
 
 export function useCreateClient() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (data: ClientInput) => {
-      const res = await fetch(api.clients.create.path, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        if (res.status === 400) {
-          const error = api.clients.create.responses[400].parse(await res.json());
-          throw new Error(error.message);
-        }
-        throw new Error("Failed to create client");
-      }
-      return api.clients.create.responses[201].parse(await res.json());
+    mutationFn: async (client: Omit<Client, "id">) => {
+      const data = { ...client, userId: auth.currentUser?.uid };
+      const docRef = await addDoc(collection(db, "clients"), data);
+      return { id: docRef.id, ...data };
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [api.clients.list.path] });
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+    }
+  });
+}
+
+export function useUpdateClient() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...data }: Partial<Client> & { id: string }) => {
+      const docRef = doc(db, "clients", id);
+      await updateDoc(docRef, data);
+      return { id, ...data };
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+    }
+  });
+}
+
+export function useDeleteClient() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await deleteDoc(doc(db, "clients", id));
+      return id;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+    }
   });
 }

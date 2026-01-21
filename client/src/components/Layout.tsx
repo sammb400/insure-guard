@@ -6,14 +6,18 @@ import {
   Settings, 
   Bell, 
   Search,
-  ShieldCheck 
+  ShieldCheck,
+  Menu,
+  X
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import { useState } from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleSignOut = () => {
     // Logic-less, just redirect to landing
@@ -28,22 +32,37 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   ];
 
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
+    <div className="flex min-h-screen bg-background text-foreground w-full overflow-x-hidden">
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-30 bg-background/80 backdrop-blur-sm md:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r bg-card/50 backdrop-blur-xl transition-transform md:translate-x-0 -translate-x-full">
+      <aside className={`fixed left-0 top-0 z-40 h-screen w-64 border-r bg-card/50 backdrop-blur-xl transition-transform md:translate-x-0 ${isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="flex h-full flex-col">
-          <div className="flex h-16 items-center border-b px-6">
+          <div className="flex h-16 items-center justify-between border-b px-6">
             <div className="flex items-center gap-2 font-display text-xl font-bold text-primary">
               <ShieldCheck className="h-6 w-6 text-accent" />
               <span>InsureGuard</span>
             </div>
+            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
+              <X className="h-5 w-5" />
+            </Button>
           </div>
           
           <nav className="flex-1 space-y-1 px-3 py-4">
             {navItems.map((item) => {
               const isActive = location === item.href;
               return (
-                <Link key={item.href} href={item.href} className={`
+                <Link 
+                  key={item.href} 
+                  href={item.href} 
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className={`
                   flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200
                   ${isActive 
                     ? "bg-primary/10 text-primary shadow-sm" 
@@ -80,10 +99,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 md:pl-64">
+      <main className="flex-1 md:pl-64 min-w-0">
         {/* Header */}
         <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-lg">
           <div className="flex items-center gap-4 text-muted-foreground">
+            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileMenuOpen(true)}>
+              <Menu className="h-5 w-5" />
+            </Button>
             <Search className="h-5 w-5" />
             <input 
               type="text" 

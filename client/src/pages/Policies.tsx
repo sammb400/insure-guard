@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import { usePolicies } from "@/hooks/use-policies";
+import { useData } from "@/lib/DataContext";
 import { CreatePolicyDialog } from "@/components/CreatePolicyDialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ const PolicyIcon = ({ type }: { type: string }) => {
 };
 
 export default function Policies() {
-  const { data: policies, isLoading } = usePolicies();
+  const { policies, isLoading } = useData();
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredPolicies = policies?.filter(policy => 
@@ -67,7 +67,7 @@ export default function Policies() {
           </Button>
         </div>
 
-        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+        <div className="rounded-xl border bg-card shadow-sm overflow-x-auto">
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>

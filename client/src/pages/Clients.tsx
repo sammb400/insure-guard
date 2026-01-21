@@ -1,11 +1,11 @@
 import Layout from "@/components/Layout";
-import { useClients } from "@/hooks/use-clients";
+import { useData } from "@/lib/DataContext";
 import { CreateClientDialog } from "@/components/CreateClientDialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, MoreHorizontal } from "lucide-react";
+import { Search, Filter, MoreHorizontal, Mail, Phone } from "lucide-react";
 import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,15 +16,35 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Client } from "@/lib/DataContext";
 
 export default function Clients() {
-  const { data: clients, isLoading } = useClients();
+  const { clients, policies, isLoading, deleteClient } = useData();
   const [searchTerm, setSearchTerm] = useState("");
+  const [clientToEdit, setClientToEdit] = useState<Client | null>(null);
+  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
 
   const filteredClients = clients?.filter(client => 
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDelete = async () => {
+    if (clientToDelete) {
+      await deleteClient(clientToDelete.id);
+      setClientToDelete(null);
+    }
+  };
 
   return (
     <Layout>
@@ -53,83 +73,110 @@ export default function Clients() {
           </Button>
         </div>
 
-        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-          <Table>
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead>Client</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Policies</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                [1, 2, 3, 4, 5].map((i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-10 w-40" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-8" /></TableCell>
-                    <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                filteredClients?.map((client) => (
-                  <TableRow key={client.id} className="group hover:bg-muted/50 transition-colors cursor-pointer">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-9 w-9 border border-border">
-                          <AvatarImage src={client.avatar || undefined} />
-                          <AvatarFallback className="bg-primary/10 text-primary font-medium">
-                            {client.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium text-foreground">{client.name}</p>
-                          <p className="text-xs text-muted-foreground">ID: {client.id}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col text-sm">
-                        <span>{client.email}</span>
-                        <span className="text-muted-foreground">{client.phone}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={client.status || 'active'} />
-                    </TableCell>
-                    <TableCell>
-                      <span className="font-medium">--</span> {/* Need relation count in API */}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Edit Client</DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {isLoading ? (
+            [1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <Card key={i} className="overflow-hidden">
+                <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </div>
+                  <div className="flex justify-between">
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-4 w-10" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            filteredClients?.map((client) => (
+              <Card key={client.id} className="group overflow-hidden transition-all hover:shadow-md">
+                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10 border border-border">
+                      <AvatarImage src={client.avatar || undefined} />
+                      <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                        {client.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <CardTitle className="text-base font-semibold">{client.name}</CardTitle>
+                      <p className="text-xs text-muted-foreground">ID: {client.id}</p>
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem>View Details</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setClientToEdit(client)}>Edit Client</DropdownMenuItem>
+                      <DropdownMenuItem className="text-destructive" onClick={() => setClientToDelete(client)}>Delete</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-2 text-sm mb-4">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Mail className="h-4 w-4" />
+                      <span className="truncate">{client.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <Phone className="h-4 w-4" />
+                      <span>{client.phone}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between border-t pt-4">
+                    <StatusBadge status={client.status || 'active'} />
+                    <div className="text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">{policies?.filter(p => p.clientId === client.id).length || 0}</span> Policies
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
           {!isLoading && filteredClients?.length === 0 && (
-            <div className="p-8 text-center text-muted-foreground">
+            <div className="col-span-full p-8 text-center text-muted-foreground">
               No clients found matching your search.
             </div>
           )}
         </div>
+
+        <CreateClientDialog 
+          open={!!clientToEdit} 
+          onOpenChange={(open) => !open && setClientToEdit(null)}
+          client={clientToEdit || undefined}
+        />
+
+        <AlertDialog open={!!clientToDelete} onOpenChange={(open) => !open && setClientToDelete(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the client
+                and remove their data from our servers.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </Layout>
   );

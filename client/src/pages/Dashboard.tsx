@@ -1,14 +1,13 @@
 import Layout from "@/components/Layout";
-import { useDashboardStats } from "@/hooks/use-dashboard";
+import { useData, type DashboardStats } from "@/lib/DataContext";
 import { StatsCard } from "@/components/StatsCard";
 import { Users, FileText, DollarSign, AlertCircle, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { usePolicies } from "@/hooks/use-policies";
 import { StatusBadge } from "@/components/StatusBadge";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 
-function StatsGrid({ stats }: { stats: any }) {
+function StatsGrid({ stats }: { stats: DashboardStats | null }) {
   if (!stats) return <Skeleton className="h-32 w-full rounded-xl" />;
   
   return (
@@ -49,12 +48,11 @@ function StatsGrid({ stats }: { stats: any }) {
 }
 
 export default function Dashboard() {
-  const { data: stats, isLoading: statsLoading } = useDashboardStats();
-  const { data: policies, isLoading: policiesLoading } = usePolicies();
+  const { stats, policies, isLoading } = useData();
 
   const expiringPolicies = policies
-    ?.filter(p => new Date(p.expirationDate) > new Date() && new Date(p.expirationDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
-    .slice(0, 5) || [];
+    .filter(p => new Date(p.expirationDate) > new Date() && new Date(p.expirationDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
+    .slice(0, 5);
 
   return (
     <Layout>
@@ -64,7 +62,7 @@ export default function Dashboard() {
           <p className="mt-2 text-muted-foreground">Overview of your agency's performance and alerts.</p>
         </div>
 
-        {statsLoading ? (
+        {isLoading ? (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
           </div>
@@ -81,13 +79,13 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {policiesLoading ? (
+              {isLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full" />)}
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {policies?.slice(0, 5).map((policy) => (
+                  {policies.slice(0, 5).map((policy) => (
                     <div key={policy.id} className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0">
                       <div>
                         <p className="font-medium">{policy.policyNumber}</p>
@@ -99,7 +97,7 @@ export default function Dashboard() {
                       </div>
                     </div>
                   ))}
-                  {(!policies || policies.length === 0) && (
+                  {policies.length === 0 && (
                     <p className="text-muted-foreground text-center py-4">No recent activity.</p>
                   )}
                 </div>
@@ -115,7 +113,7 @@ export default function Dashboard() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {policiesLoading ? (
+              {isLoading ? (
                 <div className="space-y-4">
                   {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full" />)}
                 </div>

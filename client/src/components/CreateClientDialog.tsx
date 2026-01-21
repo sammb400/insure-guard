@@ -1,19 +1,30 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertClientSchema } from "@shared/schema";
-import { useCreateClient } from "@/hooks/use-clients";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { useData } from "@/lib/DataContext";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Client } from "@/lib/DataContext";
 
-export function CreateClientDialog() {
-  const [open, setOpen] = useState(false);
+interface CreateClientDialogProps {
+  client?: Client;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function CreateClientDialog({ client, open: controlledOpen, onOpenChange }: CreateClientDialogProps) {
+  const [internalOpen, setInternalOpen] = useState(false);
   const { toast } = useToast();
-  const createClient = useCreateClient();
+  const { addClient, updateClient } = useData();
+
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? onOpenChange : setInternalOpen;
   
   const form = useForm({
     resolver: zodResolver(insertClientSchema),
@@ -21,21 +32,49 @@ export function CreateClientDialog() {
       name: "",
       email: "",
       phone: "",
-      address: "",
+      kraPin: "",
+      idNumber: "",
       status: "active",
     }
   });
 
+  useEffect(() => {
+    if (client) {
+      form.reset({
+        name: client.name,
+        email: client.email,
+        phone: client.phone,
+        kraPin: client.kraPin || "",
+        idNumber: client.idNumber || "",
+        status: client.status || "active",
+      });
+    } else {
+      form.reset({
+        name: "",
+        email: "",
+        phone: "",
+        kraPin: "",
+        idNumber: "",
+        status: "active",
+      });
+    }
+  }, [client, open, form]);
+
   async function onSubmit(data: any) {
     try {
-      await createClient.mutateAsync(data);
-      toast({ title: "Success", description: "Client created successfully" });
-      setOpen(false);
-      form.reset();
+      if (client) {
+        await updateClient(client.id, data);
+        toast({ title: "Success", description: "Client updated successfully" });
+      } else {
+        await addClient(data);
+        toast({ title: "Success", description: "Client created successfully" });
+      }
+      setOpen && setOpen(false);
+      if (!client) form.reset();
     } catch (error) {
       toast({ 
         title: "Error", 
-        description: error instanceof Error ? error.message : "Failed to create client",
+        description: error instanceof Error ? error.message : `Failed to ${client ? 'update' : 'create'} client`,
         variant: "destructive" 
       });
     }
@@ -43,15 +82,18 @@ export function CreateClientDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
-          <Plus className="mr-2 h-4 w-4" />
-          Add Client
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      {!client && (
+        <DialogTrigger asChild>
+          <Button className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20">
+            <Plus className="mr-2 h-4 w-4" />
+            Add Client
+          </Button>
+        </DialogTrigger>
+      )}
+      <DialogContent className="sm:max-w-[500px] !fixed !left-[50%] !top-[50%] !translate-x-[-50%] !translate-y-[-50%] z-50">
         <DialogHeader>
-          <DialogTitle>Add New Client</DialogTitle>
+          <DialogTitle>{client ? "Edit Client" : "Add New Client"}</DialogTitle>
+          <DialogDescription>{client ? "Update client details." : "Enter the details of the new client here."}</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -98,24 +140,39 @@ export function CreateClientDialog() {
               />
             </div>
             
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Address</FormLabel>
-                  <FormControl>
-                    <Input placeholder="123 Main St, City, State" {...field} value={field.value || ''} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="kraPin"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>KRA Pin</FormLabel>
+                    <FormControl>
+                      <Input placeholder="A000..." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="idNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ID Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder="12345678" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={createClient.isPending}>
-                {createClient.isPending ? "Creating..." : "Create Client"}
+              <Button type="button" variant="outline" onClick={() => setOpen && setOpen(false)}>Cancel</Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? (client ? "Updating..." : "Creating...") : (client ? "Update Client" : "Create Client")}
               </Button>
             </div>
           </form>
