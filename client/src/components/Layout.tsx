@@ -21,7 +21,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
 
   const navItems = [
-    { label: "Dashboard", icon: LayoutDashboard, href: "/" },
+    { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
     { label: "Clients", icon: Users, href: "/clients" },
     { label: "Policies", icon: FileText, href: "/policies" },
     { label: "Settings", icon: Settings, href: "/settings" },
