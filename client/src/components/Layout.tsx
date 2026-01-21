@@ -101,7 +101,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Main Content */}
       <main className="flex-1 md:pl-64 min-w-0">
         {/* Header */}
-        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-6 backdrop-blur-lg">
+        <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-background/80 px-4 md:px-6 backdrop-blur-lg">
           <div className="flex items-center gap-4 text-muted-foreground">
             <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsMobileMenuOpen(true)}>
               <Menu className="h-5 w-5" />
@@ -110,11 +110,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <input 
               type="text" 
               placeholder="Search policies, clients..." 
-              className="w-64 bg-transparent text-sm focus:outline-none text-foreground placeholder:text-muted-foreground"
+              className="w-32 md:w-64 bg-transparent text-sm focus:outline-none text-foreground placeholder:text-muted-foreground"
             />
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary">
+            <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary mr-2 md:mr-0">
               <Bell className="h-5 w-5" />
               <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive ring-2 ring-background"></span>
             </Button>

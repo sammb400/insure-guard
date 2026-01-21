@@ -3,6 +3,7 @@ import { useData } from "@/lib/DataContext";
 import { CreateClientDialog } from "@/components/CreateClientDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ClientDetailsDialog } from "@/components/ClientDetailsDialog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, MoreHorizontal, Mail, Phone } from "lucide-react";
@@ -31,13 +32,17 @@ import { Client } from "@/lib/DataContext";
 export default function Clients() {
   const { clients, policies, isLoading, deleteClient } = useData();
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [clientToEdit, setClientToEdit] = useState<Client | null>(null);
   const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
+  const [clientToView, setClientToView] = useState<Client | null>(null);
 
-  const filteredClients = clients?.filter(client => 
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredClients = clients?.filter(client => {
+    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      client.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === "all" || (client.status || 'active') === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const handleDelete = async () => {
     if (clientToDelete) {
@@ -67,10 +72,21 @@ export default function Clients() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Filters
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Filter className="h-4 w-4" />
+                <span className="hidden sm:inline">Status: </span>
+                {statusFilter === 'all' ? 'All' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setStatusFilter("all")}>All</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("active")}>Active</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("pending")}>Pending</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("inactive")}>Inactive</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -120,7 +136,7 @@ export default function Clients() {
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                      <DropdownMenuItem>View Details</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => setClientToView(client)}>View Details</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setClientToEdit(client)}>Edit Client</DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive" onClick={() => setClientToDelete(client)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
@@ -160,8 +176,14 @@ export default function Clients() {
           client={clientToEdit || undefined}
         />
 
+        <ClientDetailsDialog 
+          open={!!clientToView}
+          onOpenChange={(open) => !open && setClientToView(null)}
+          client={clientToView}
+        />
+
         <AlertDialog open={!!clientToDelete} onOpenChange={(open) => !open && setClientToDelete(null)}>
-          <AlertDialogContent>
+          <AlertDialogContent className="sm:max-w-[500px] !fixed !left-[50%] !top-[50%] !translate-x-[-50%] !translate-y-[-50%] z-50">
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
               <AlertDialogDescription>

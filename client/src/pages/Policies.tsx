@@ -1,7 +1,7 @@
 import Layout from "@/components/Layout";
 import { useData } from "@/lib/DataContext";
 import { CreatePolicyDialog } from "@/components/CreatePolicyDialog";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
@@ -27,14 +28,19 @@ const PolicyIcon = ({ type }: { type: string }) => {
 };
 
 export default function Policies() {
-  const { policies, isLoading } = useData();
+  const { policies, clients, isLoading } = useData();
   const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
-  const filteredPolicies = policies?.filter(policy => 
-    policy.policyNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    policy.carrier.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    policy.type.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPolicies = policies?.filter(policy => {
+    const matchesSearch = policy.policyNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      policy.carrier.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      policy.type.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = typeFilter === "all" || policy.type === typeFilter;
+    const matchesStatus = statusFilter === "all" || policy.status === statusFilter;
+    return matchesSearch && matchesType && matchesStatus;
+  });
 
   return (
     <Layout>
@@ -57,81 +63,120 @@ export default function Policies() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Type
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Status
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Filter className="h-4 w-4" />
+                <span className="hidden sm:inline">Type: </span>
+                {typeFilter === 'all' ? 'All' : typeFilter}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setTypeFilter("all")}>All</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTypeFilter("Auto")}>Auto</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTypeFilter("Home")}>Home</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTypeFilter("Life")}>Life</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTypeFilter("Health")}>Health</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setTypeFilter("Business")}>Business</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Filter className="h-4 w-4" />
+                <span className="hidden sm:inline">Status: </span>
+                {statusFilter === 'all' ? 'All' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => setStatusFilter("all")}>All</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("active")}>Active</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("pending")}>Pending</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("expired")}>Expired</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setStatusFilter("cancelled")}>Cancelled</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
-        <div className="rounded-xl border bg-card shadow-sm overflow-x-auto">
-          <Table>
-            <TableHeader className="bg-muted/50">
-              <TableRow>
-                <TableHead>Policy Number</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Carrier</TableHead>
-                <TableHead>Premium</TableHead>
-                <TableHead>Expiration</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                [1, 2, 3, 4, 5].map((i) => (
-                  <TableRow key={i}>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-32" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-20" /></TableCell>
-                    <TableCell><Skeleton className="h-4 w-24" /></TableCell>
-                    <TableCell><Skeleton className="h-6 w-16" /></TableCell>
-                    <TableCell><Skeleton className="h-8 w-8 ml-auto" /></TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                filteredPolicies?.map((policy) => (
-                  <TableRow key={policy.id} className="group hover:bg-muted/50 transition-colors">
-                    <TableCell className="font-medium text-primary">
-                      {policy.policyNumber}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        <PolicyIcon type={policy.type} />
-                        <span>{policy.type}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{policy.carrier}</TableCell>
-                    <TableCell>${Number(policy.premium).toLocaleString()}</TableCell>
-                    <TableCell>{format(new Date(policy.expirationDate), 'MMM d, yyyy')}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={policy.status} />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Details</DropdownMenuItem>
-                          <DropdownMenuItem>Edit Policy</DropdownMenuItem>
-                          <DropdownMenuItem>Renew</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {isLoading ? (
+            [1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <Card key={i} className="overflow-hidden">
+                <CardHeader className="flex flex-row items-center gap-4 space-y-0 pb-2">
+                  <Skeleton className="h-10 w-10 rounded-full" />
+                  <div className="space-y-1">
+                    <Skeleton className="h-4 w-24" />
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-2/3" />
+                  </div>
+                  <div className="flex justify-between">
+                    <Skeleton className="h-5 w-16" />
+                    <Skeleton className="h-4 w-10" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            filteredPolicies?.map((policy) => (
+              <Card key={policy.id} className="group overflow-hidden transition-all hover:shadow-md">
+                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 p-2.5 rounded-lg text-primary">
+                      <PolicyIcon type={policy.type} />
+                    </div>
+                    <div>
+                      <CardTitle className="text-base font-semibold">{policy.policyNumber}</CardTitle>
+                      <p className="text-xs text-muted-foreground">{policy.carrier}</p>
+                    </div>
+                  </div>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuItem>View Details</DropdownMenuItem>
+                      <DropdownMenuItem>Edit Policy</DropdownMenuItem>
+                      <DropdownMenuItem>Renew</DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-2 text-sm mb-4">
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Client</span>
+                      <span className="font-medium truncate max-w-[120px]">
+                        {clients?.find(c => c.id === policy.clientId)?.name || 'Unknown'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Premium</span>
+                      <span className="font-medium">${Number(policy.premium).toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Expires</span>
+                      <span className="font-medium">{format(new Date(policy.expirationDate), 'MMM d, yyyy')}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between border-t pt-4">
+                    <StatusBadge status={policy.status} />
+                    <div className="text-xs text-muted-foreground">
+                      {policy.type}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
           {!isLoading && filteredPolicies?.length === 0 && (
-            <div className="p-8 text-center text-muted-foreground">
+            <div className="col-span-full p-8 text-center text-muted-foreground">
               No policies found matching your search.
             </div>
           )}
