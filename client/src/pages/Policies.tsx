@@ -76,6 +76,14 @@ export default function Policies() {
     }
   };
 
+  const isRenewable = (policy: Policy) => {
+    const expirationDate = new Date(policy.expirationDate);
+    const today = new Date();
+    const diffTime = expirationDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays <= 60;
+  };
+
   return (
     <Layout>
       <div className="space-y-8">
@@ -178,7 +186,7 @@ export default function Policies() {
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem onClick={() => setPolicyToView(policy)}>View Details</DropdownMenuItem>
                       <DropdownMenuItem onClick={() => setPolicyToEdit(policy)}>Edit Policy</DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setPolicyToRenew(policy)}>Renew</DropdownMenuItem>
+                      <DropdownMenuItem disabled={!isRenewable(policy)} onClick={() => setPolicyToRenew(policy)}>Renew</DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive" onClick={() => setPolicyToDelete(policy)}>Delete</DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

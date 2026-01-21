@@ -14,10 +14,29 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/lib/AuthContext";
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { useEffect } from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user } = useAuth();
+  const [avatar, setAvatar] = useState("");
+
+  useEffect(() => {
+    const fetchAvatar = async () => {
+      if (user) {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().photoURL) {
+          setAvatar(docSnap.data().photoURL);
+        }
+      }
+    };
+    fetchAvatar();
+  }, [user]);
 
   const handleSignOut = () => {
     // Logic-less, just redirect to landing
@@ -86,12 +105,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="border-t p-4">
             <div className="flex items-center gap-3 rounded-lg bg-secondary/50 p-3">
               <Avatar className="h-9 w-9 border border-border">
-                <AvatarImage src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" />
-                <AvatarFallback>AD</AvatarFallback>
+                <AvatarImage src={avatar || user?.photoURL || undefined} />
+                <AvatarFallback>{user?.displayName?.charAt(0) || "U"}</AvatarFallback>
               </Avatar>
               <div className="flex-1 overflow-hidden">
-                <p className="truncate text-sm font-medium">Alex Davis</p>
-                <p className="truncate text-xs text-muted-foreground">Admin</p>
+                <p className="truncate text-sm font-medium">{user?.displayName || "User"}</p>
+                <p className="truncate text-xs text-muted-foreground">{user?.email}</p>
               </div>
             </div>
           </div>
