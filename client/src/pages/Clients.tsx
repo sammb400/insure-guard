@@ -144,10 +144,10 @@ export default function Clients() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-2 text-sm mb-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <Mail className="h-4 w-4" />
+                    <a href={`mailto:${client.email}`} className="flex items-center gap-2 text-muted-foreground hover:underline cursor-pointer">
+                      <Mail className="h-4 w-4 flex-shrink-0" />
                       <span className="truncate">{client.email}</span>
-                    </div>
+                    </a>
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Phone className="h-4 w-4 flex-shrink-0" />
                       {client.phone ? (
@@ -185,7 +185,7 @@ export default function Clients() {
         <ClientDetailsDialog 
           open={!!clientToView}
           onOpenChange={(open) => !open && setClientToView(undefined)}
-          client={clientToView}
+          client={clientToView ?? null}
         />
 
         <AlertDialog open={!!clientToDelete} onOpenChange={(open) => !open && setClientToDelete(undefined)}>

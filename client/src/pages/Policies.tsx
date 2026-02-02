@@ -234,7 +234,7 @@ export default function Policies() {
         <PolicyDetailsDialog 
           open={!!policyToView}
           onOpenChange={(open) => !open && setPolicyToView(undefined)}
-          policy={policyToView}
+          policy={policyToView ?? null}
         />
 
         <AlertDialog open={!!policyToDelete} onOpenChange={(open) => !open && setPolicyToDelete(undefined)}>
