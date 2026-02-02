@@ -13,6 +13,8 @@ import Settings from "@/pages/Settings";
 import Landing from "@/pages/Landing";
 import Login from "@/pages/Login";
 import Signup from "@/pages/Signup";
+import ResetPassword from "@/pages/ResetPassWord";
+import { ThemeProvider } from "@/hooks/use-theme";
 
 function Router() {
   return (
@@ -24,12 +26,11 @@ function Router() {
       <Route path="/clients" component={Clients} />
       <Route path="/policies" component={Policies} />
       <Route path="/settings" component={Settings} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route component={NotFound} />
     </Switch>
   );
 }
-
-import { ThemeProvider } from "@/hooks/use-theme";
 
 function App() {
   return (

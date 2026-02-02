@@ -21,7 +21,7 @@ function StatsGrid({ stats }: { stats: DashboardStats | null }) {
       />
       <StatsCard 
         title="Premium Volume" 
-        value={`$${Number(stats.totalPremiumVolume).toLocaleString()}`} 
+        value={`Kes${Number(stats.totalPremiumVolume).toLocaleString()}`} 
         icon={DollarSign} 
         color="emerald"
         trend="8%" 
@@ -92,7 +92,7 @@ export default function Dashboard() {
                         <p className="text-sm text-muted-foreground">{policy.type} - {policy.carrier}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-medium">${Number(policy.premium).toLocaleString()}</p>
+                        <p className="font-medium">Kes{Number(policy.premium).toLocaleString()}</p>
                         <p className="text-xs text-muted-foreground">{format(new Date(policy.startDate), 'MMM d, yyyy')}</p>
                       </div>
                     </div>

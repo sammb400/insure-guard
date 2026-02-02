@@ -44,10 +44,10 @@ export default function Policies() {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [policyToEdit, setPolicyToEdit] = useState<Policy | null>(null);
-  const [policyToDelete, setPolicyToDelete] = useState<Policy | null>(null);
-  const [policyToView, setPolicyToView] = useState<Policy | null>(null);
-  const [policyToRenew, setPolicyToRenew] = useState<Policy | null>(null);
+  const [policyToEdit, setPolicyToEdit] = useState<Policy | undefined>();
+  const [policyToDelete, setPolicyToDelete] = useState<Policy | undefined>();
+  const [policyToView, setPolicyToView] = useState<Policy | undefined>();
+  const [policyToRenew, setPolicyToRenew] = useState<Policy | undefined>();
 
   const filteredPolicies = policies?.filter(policy => {
     const matchesSearch = policy.policyNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -61,7 +61,7 @@ export default function Policies() {
   const handleDelete = async () => {
     if (policyToDelete) {
       await deletePolicy(policyToDelete.id);
-      setPolicyToDelete(null);
+      setPolicyToDelete(undefined);
     }
   };
 
@@ -72,7 +72,7 @@ export default function Policies() {
       const newExp = new Date(currentExp.setFullYear(currentExp.getFullYear() + 1));
       
       await updatePolicy(policyToRenew.id, { expirationDate: newExp.toISOString().split('T')[0] });
-      setPolicyToRenew(null);
+      setPolicyToRenew(undefined);
     }
   };
 
@@ -201,7 +201,7 @@ export default function Policies() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Premium</span>
-                      <span className="font-medium">${Number(policy.premium).toLocaleString()}</span>
+                      <span className="font-medium">Kes {Number(policy.premium).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Expires</span>
@@ -227,17 +227,17 @@ export default function Policies() {
 
         <CreatePolicyDialog 
           open={!!policyToEdit} 
-          onOpenChange={(open) => !open && setPolicyToEdit(null)}
-          policy={policyToEdit || undefined}
+          onOpenChange={(open) => !open && setPolicyToEdit(undefined)}
+          policy={policyToEdit}
         />
 
         <PolicyDetailsDialog 
           open={!!policyToView}
-          onOpenChange={(open) => !open && setPolicyToView(null)}
+          onOpenChange={(open) => !open && setPolicyToView(undefined)}
           policy={policyToView}
         />
 
-        <AlertDialog open={!!policyToDelete} onOpenChange={(open) => !open && setPolicyToDelete(null)}>
+        <AlertDialog open={!!policyToDelete} onOpenChange={(open) => !open && setPolicyToDelete(undefined)}>
           <AlertDialogContent className="sm:max-w-[500px] !fixed !left-[50%] !top-[50%] !translate-x-[-50%] !translate-y-[-50%] z-50">
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -254,7 +254,7 @@ export default function Policies() {
           </AlertDialogContent>
         </AlertDialog>
 
-        <AlertDialog open={!!policyToRenew} onOpenChange={(open) => !open && setPolicyToRenew(null)}>
+        <AlertDialog open={!!policyToRenew} onOpenChange={(open) => !open && setPolicyToRenew(undefined)}>
           <AlertDialogContent className="sm:max-w-[500px] !fixed !left-[50%] !top-[50%] !translate-x-[-50%] !translate-y-[-50%] z-50">
             <AlertDialogHeader>
               <AlertDialogTitle>Renew Policy?</AlertDialogTitle>

@@ -6,10 +6,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Link, useLocation } from "wouter";
 import { ShieldCheck, LogIn } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Login() {
   const [, setLocation] = useLocation();
-  const { login, loginWithGoogle, resetPassword } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
+  const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,11 @@ export default function Login() {
       setLocation("/dashboard");
     } catch (error) {
       console.error(error);
-      alert("Failed to login. Please check your credentials.");
+      toast({
+        title: "Login Failed",
+        description: "Failed to login. Please check your credentials.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -34,21 +40,11 @@ export default function Login() {
       setLocation("/dashboard");
     } catch (error) {
       console.error(error);
-      alert("Failed to login with Google.");
-    }
-  };
-
-  const handleResetPassword = async () => {
-    if (!email) {
-      alert("Please enter your email address to reset your password.");
-      return;
-    }
-    try {
-      await resetPassword(email);
-      alert("Password reset email sent! Please check your inbox.");
-    } catch (error) {
-      console.error(error);
-      alert("Failed to send reset email. Please check the email address.");
+      toast({
+        title: "Login Failed",
+        description: "Failed to login with Google.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -84,14 +80,9 @@ export default function Login() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Button 
-                    variant="ghost" 
-                    className="p-0 h-auto text-xs" 
-                    type="button"
-                    onClick={handleResetPassword}
-                  >
+                  <Link href="/reset-password" className="text-xs text-muted-foreground hover:text-primary hover:underline">
                     Forgot password?
-                  </Button>
+                  </Link>
                 </div>
                 <Input 
                   id="password" 

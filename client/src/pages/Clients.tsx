@@ -33,9 +33,9 @@ export default function Clients() {
   const { clients, policies, isLoading, deleteClient } = useData();
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [clientToEdit, setClientToEdit] = useState<Client | null>(null);
-  const [clientToDelete, setClientToDelete] = useState<Client | null>(null);
-  const [clientToView, setClientToView] = useState<Client | null>(null);
+  const [clientToEdit, setClientToEdit] = useState<Client | undefined>();
+  const [clientToDelete, setClientToDelete] = useState<Client | undefined>();
+  const [clientToView, setClientToView] = useState<Client | undefined>();
 
   const filteredClients = clients?.filter(client => {
     const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -47,7 +47,7 @@ export default function Clients() {
   const handleDelete = async () => {
     if (clientToDelete) {
       await deleteClient(clientToDelete.id);
-      setClientToDelete(null);
+      setClientToDelete(undefined);
     }
   };
 
@@ -149,8 +149,14 @@ export default function Clients() {
                       <span className="truncate">{client.email}</span>
                     </div>
                     <div className="flex items-center gap-2 text-muted-foreground">
-                      <Phone className="h-4 w-4" />
-                      <span>{client.phone}</span>
+                      <Phone className="h-4 w-4 flex-shrink-0" />
+                      {client.phone ? (
+                        <a href={`tel:${client.phone}`} className="hover:underline cursor-pointer truncate">
+                          {client.phone}
+                        </a>
+                      ) : (
+                        <span>-</span>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center justify-between border-t pt-4">
@@ -172,17 +178,17 @@ export default function Clients() {
 
         <CreateClientDialog 
           open={!!clientToEdit} 
-          onOpenChange={(open) => !open && setClientToEdit(null)}
-          client={clientToEdit || undefined}
+          onOpenChange={(open) => !open && setClientToEdit(undefined)}
+          client={clientToEdit}
         />
 
         <ClientDetailsDialog 
           open={!!clientToView}
-          onOpenChange={(open) => !open && setClientToView(null)}
+          onOpenChange={(open) => !open && setClientToView(undefined)}
           client={clientToView}
         />
 
-        <AlertDialog open={!!clientToDelete} onOpenChange={(open) => !open && setClientToDelete(null)}>
+        <AlertDialog open={!!clientToDelete} onOpenChange={(open) => !open && setClientToDelete(undefined)}>
           <AlertDialogContent className="sm:max-w-[500px] !fixed !left-[50%] !top-[50%] !translate-x-[-50%] !translate-y-[-50%] z-50">
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
