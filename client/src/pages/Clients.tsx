@@ -151,9 +151,19 @@ export default function Clients() {
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Phone className="h-4 w-4 flex-shrink-0" />
                       {client.phone ? (
-                        <a href={`tel:${client.phone}`} className="hover:underline cursor-pointer truncate">
-                          {client.phone}
-                        </a>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <span className="hover:underline cursor-pointer truncate">{client.phone}</span>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => window.location.href = `tel:${client.phone}`}>
+                              Call
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => window.open(`https://wa.me/${client.phone?.replace(/[^0-9]/g, '')}`, '_blank')}>
+                              WhatsApp
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       ) : (
                         <span>-</span>
                       )}
