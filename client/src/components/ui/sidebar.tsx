@@ -3,7 +3,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { cva, VariantProps } from "class-variance-authority"
-import { PanelLeftIcon } from "lucide-react"
+import { PanelLeftIcon, ChevronLeft, ChevronRight } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -29,7 +29,7 @@ const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
-const SIDEBAR_WIDTH_ICON = "3rem"
+const SIDEBAR_WIDTH_ICON = "4rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
 
 type SidebarContextProps = {
@@ -275,6 +275,26 @@ function SidebarTrigger({
     >
       <PanelLeftIcon />
       <span className="sr-only">Toggle Sidebar</span>
+    </Button>
+  )
+}
+
+function SidebarCollapseButton({
+  className,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  const { state, toggleSidebar } = useSidebar()
+  const collapsed = state === "collapsed"
+
+  return (
+    <Button
+      variant="ghost"
+      className={cn("flex w-full items-center justify-start gap-2", className)}
+      onClick={toggleSidebar}
+      {...props}
+    >
+      {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+      {!collapsed && <span>Collapse</span>}
     </Button>
   )
 }
@@ -723,5 +743,6 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
+  SidebarCollapseButton,
   useSidebar,
 }

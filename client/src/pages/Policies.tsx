@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Search, Filter, MoreHorizontal, Car, Home, Heart, Briefcase, Activity } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Policy } from "@/lib/DataContext";
+import { useSearch } from "wouter";
 
 const PolicyIcon = ({ type }: { type: string }) => {
   switch (type.toLowerCase()) {
@@ -40,6 +41,7 @@ const PolicyIcon = ({ type }: { type: string }) => {
 };
 
 export default function Policies() {
+  const search = useSearch();
   const { policies, clients, isLoading, updatePolicy, deletePolicy } = useData();
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
@@ -48,6 +50,17 @@ export default function Policies() {
   const [policyToDelete, setPolicyToDelete] = useState<Policy | undefined>();
   const [policyToView, setPolicyToView] = useState<Policy | undefined>();
   const [policyToRenew, setPolicyToRenew] = useState<Policy | undefined>();
+
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const policyId = params.get("policyId");
+    if (policyId && policies.length > 0) {
+      const policy = policies.find(p => p.id === policyId);
+      if (policy) {
+        setPolicyToView(policy);
+      }
+    }
+  }, [search, policies]);
 
   const filteredPolicies = policies?.filter(policy => {
     const matchesSearch = policy.policyNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -84,8 +97,55 @@ export default function Policies() {
     return diffDays <= 60;
   };
 
+  const headerSearch = (
+    <div className="flex items-center gap-2 w-full">
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input 
+          placeholder="Search policies..." 
+          className="pl-9 border-none bg-secondary/50 focus-visible:ring-0 h-9" 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2 h-9">
+            <Filter className="h-4 w-4" />
+            <span className="hidden sm:inline">Type: </span>
+            {typeFilter === 'all' ? 'All' : typeFilter}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setTypeFilter("all")}>All</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTypeFilter("Auto")}>Auto</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTypeFilter("Home")}>Home</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTypeFilter("Life")}>Life</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTypeFilter("Health")}>Health</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setTypeFilter("Business")}>Business</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2 h-9">
+            <Filter className="h-4 w-4" />
+            <span className="hidden sm:inline">Status: </span>
+            {statusFilter === 'all' ? 'All' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setStatusFilter("all")}>All</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setStatusFilter("active")}>Active</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setStatusFilter("pending")}>Pending</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setStatusFilter("expired")}>Expired</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setStatusFilter("cancelled")}>Cancelled</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+
   return (
-    <Layout>
+    <Layout headerContent={headerSearch}>
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -93,51 +153,6 @@ export default function Policies() {
             <p className="text-muted-foreground">Manage and track insurance policies.</p>
           </div>
           <CreatePolicyDialog />
-        </div>
-
-        <div className="flex items-center gap-4 rounded-xl border bg-card p-4 shadow-sm">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input 
-              placeholder="Search policies..." 
-              className="pl-9 border-none bg-secondary/50 focus-visible:ring-0" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Filter className="h-4 w-4" />
-                <span className="hidden sm:inline">Type: </span>
-                {typeFilter === 'all' ? 'All' : typeFilter}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setTypeFilter("all")}>All</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTypeFilter("Auto")}>Auto</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTypeFilter("Home")}>Home</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTypeFilter("Life")}>Life</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTypeFilter("Health")}>Health</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setTypeFilter("Business")}>Business</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Filter className="h-4 w-4" />
-                <span className="hidden sm:inline">Status: </span>
-                {statusFilter === 'all' ? 'All' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setStatusFilter("all")}>All</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("active")}>Active</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("pending")}>Pending</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("expired")}>Expired</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("cancelled")}>Cancelled</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -166,7 +181,7 @@ export default function Policies() {
           ) : (
             filteredPolicies?.map((policy) => (
               <Card key={policy.id} className="group overflow-hidden transition-all hover:shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                <CardHeader className="flex flex-row items-start justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
                   <div className="flex items-center gap-3">
                     <div className="bg-primary/10 p-2.5 rounded-lg text-primary">
                       <PolicyIcon type={policy.type} />
@@ -191,8 +206,8 @@ export default function Policies() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid gap-2 text-sm mb-4">
+                <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                  <div className="grid gap-1 sm:gap-2 text-sm mb-2 sm:mb-4">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Client</span>
                       <span className="font-medium truncate max-w-[120px]">
@@ -208,7 +223,7 @@ export default function Policies() {
                       <span className="font-medium">{format(new Date(policy.expirationDate), 'MMM d, yyyy')}</span>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between border-t pt-4">
+                  <div className="flex items-center justify-between border-t pt-2 sm:pt-4">
                     <StatusBadge status={policy.status} />
                     <div className="text-xs text-muted-foreground">
                       {policy.type}

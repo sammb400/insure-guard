@@ -51,8 +51,37 @@ export default function Clients() {
     }
   };
 
+  const headerSearch = (
+    <div className="flex items-center gap-2 w-full">
+      <div className="relative flex-1">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input 
+          placeholder="Search clients..." 
+          className="pl-9 border-none bg-secondary/50 focus-visible:ring-0 h-9" 
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2 h-9">
+            <Filter className="h-4 w-4" />
+            <span className="hidden sm:inline">Status: </span>
+            {statusFilter === 'all' ? 'All' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setStatusFilter("all")}>All</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setStatusFilter("active")}>Active</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setStatusFilter("pending")}>Pending</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setStatusFilter("inactive")}>Inactive</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+
   return (
-    <Layout>
+    <Layout headerContent={headerSearch}>
       <div className="space-y-8">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -60,33 +89,6 @@ export default function Clients() {
             <p className="text-muted-foreground">Manage your client relationships.</p>
           </div>
           <CreateClientDialog />
-        </div>
-
-        <div className="flex items-center gap-4 rounded-xl border bg-card p-4 shadow-sm">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input 
-              placeholder="Search clients..." 
-              className="pl-9 border-none bg-secondary/50 focus-visible:ring-0" 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="gap-2">
-                <Filter className="h-4 w-4" />
-                <span className="hidden sm:inline">Status: </span>
-                {statusFilter === 'all' ? 'All' : statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setStatusFilter("all")}>All</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("active")}>Active</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("pending")}>Pending</DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setStatusFilter("inactive")}>Inactive</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -115,7 +117,7 @@ export default function Clients() {
           ) : (
             filteredClients?.map((client) => (
               <Card key={client.id} className="group overflow-hidden transition-all hover:shadow-md">
-                <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                <CardHeader className="flex flex-row items-start justify-between space-y-0 p-4 pb-2 sm:p-6 sm:pb-2">
                   <div className="flex items-center gap-3">
                     <Avatar className="h-10 w-10 border border-border">
                       <AvatarImage src={client.avatar || undefined} />
@@ -125,7 +127,6 @@ export default function Clients() {
                     </Avatar>
                     <div>
                       <CardTitle className="text-base font-semibold">{client.name}</CardTitle>
-                      <p className="text-xs text-muted-foreground">ID: {client.id}</p>
                     </div>
                   </div>
                   <DropdownMenu>
@@ -142,8 +143,8 @@ export default function Clients() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid gap-2 text-sm mb-4">
+                <CardContent className="p-4 pt-0 sm:p-6 sm:pt-0">
+                  <div className="grid gap-1 sm:gap-2 text-sm mb-2 sm:mb-4">
                     <a href={`mailto:${client.email}`} className="flex items-center gap-2 text-muted-foreground hover:underline cursor-pointer">
                       <Mail className="h-4 w-4 flex-shrink-0" />
                       <span className="truncate">{client.email}</span>
@@ -169,7 +170,7 @@ export default function Clients() {
                       )}
                     </div>
                   </div>
-                  <div className="flex items-center justify-between border-t pt-4">
+                  <div className="flex items-center justify-between border-t pt-2 sm:pt-4">
                     <StatusBadge status={client.status || 'active'} />
                     <div className="text-xs text-muted-foreground">
                       <span className="font-medium text-foreground">{policies?.filter(p => p.clientId === client.id).length || 0}</span> Policies

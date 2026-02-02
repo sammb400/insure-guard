@@ -6,8 +6,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useLocation } from "wouter";
 
 function StatsGrid({ stats }: { stats: DashboardStats | null }) {
+  const [, setLocation] = useLocation();
   if (!stats) return <Skeleton className="h-32 w-full rounded-xl" />;
   
   return (
@@ -27,14 +29,16 @@ function StatsGrid({ stats }: { stats: DashboardStats | null }) {
         trend="8%" 
         trendUp={true}
       />
-      <StatsCard 
-        title="Expiring Soon" 
-        value={stats.upcomingExpirations} 
-        icon={AlertCircle} 
-        color="destructive"
-        trend="2" 
-        trendUp={false}
-      />
+      <div onClick={() => setLocation("/policies")} className="cursor-pointer transition-transform hover:scale-[1.02]">
+        <StatsCard 
+          title="Expiring Soon" 
+          value={stats.upcomingExpirations} 
+          icon={AlertCircle} 
+          color="destructive"
+          trend="2" 
+          trendUp={false}
+        />
+      </div>
       <StatsCard 
         title="Active Clients" 
         value={stats.activeClients} 
@@ -49,6 +53,7 @@ function StatsGrid({ stats }: { stats: DashboardStats | null }) {
 
 export default function Dashboard() {
   const { stats, policies, isLoading } = useData();
+  const [, setLocation] = useLocation();
 
   const expiringPolicies = policies
     .filter(p => new Date(p.expirationDate) > new Date() && new Date(p.expirationDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
@@ -120,7 +125,11 @@ export default function Dashboard() {
               ) : (
                 <div className="space-y-4">
                   {expiringPolicies.map((policy) => (
-                    <div key={policy.id} className="flex items-center justify-between rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900">
+                    <div 
+                      key={policy.id} 
+                      className="flex items-center justify-between rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900 cursor-pointer hover:bg-white/80 dark:hover:bg-slate-800 transition-colors"
+                      onClick={() => setLocation(`/policies?policyId=${policy.id}`)}
+                    >
                       <div className="space-y-1">
                         <p className="font-medium text-sm">{policy.policyNumber}</p>
                         <StatusBadge status="expiring" className="bg-amber-100 text-amber-800 border-amber-200" />
