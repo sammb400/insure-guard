@@ -12,6 +12,11 @@ export default defineConfig({
       registerType: "prompt",
       devOptions: {
         enabled: true,
+        suppressWarnings: true,
+      },
+      workbox: {
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
       },
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "mask-icon.svg"],
       manifest: {
