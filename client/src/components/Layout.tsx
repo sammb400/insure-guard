@@ -21,6 +21,7 @@ import { db } from "@/lib/firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { ReloadPrompt } from "@/hooks/reload";
 
 export default function Layout({ children, headerContent }: { children: React.ReactNode; headerContent?: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -71,6 +72,7 @@ export default function Layout({ children, headerContent }: { children: React.Re
 
   return (
     <div className="flex min-h-screen bg-background text-foreground w-full overflow-x-hidden">
+      <ReloadPrompt />
       {/* Mobile Overlay */}
       {isMobileMenuOpen && (
         <div 
