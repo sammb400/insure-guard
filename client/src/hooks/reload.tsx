@@ -26,16 +26,23 @@ export function ReloadPrompt() {
 
   useEffect(() => {
     if (needRefresh) {
-      toast({
-        title: "Update Available",
-        description: "A new version of the app is available. Update now to get the latest features.",
-        action: (
-          <ToastAction altText="Update" onClick={() => updateServiceWorker(true)}>
-            Update
-          </ToastAction>
-        ),
-        duration: Infinity,
-      });
+      const lastPrompted = localStorage.getItem("lastUpdatePrompt");
+      const now = new Date().getTime();
+      const oneDay = 24 * 60 * 60 * 1000;
+
+      if (!lastPrompted || now - parseInt(lastPrompted, 10) > oneDay) {
+        toast({
+          title: "Update Available",
+          description: "A new version of the app is available. Update now to get the latest features.",
+          action: (
+            <ToastAction altText="Update" onClick={() => updateServiceWorker(true)}>
+              Update
+            </ToastAction>
+          ),
+          duration: Infinity,
+        });
+        localStorage.setItem("lastUpdatePrompt", now.toString());
+      }
     }
   }, [needRefresh, toast, updateServiceWorker]);
 
@@ -43,16 +50,23 @@ export function ReloadPrompt() {
     const handler = (e: Event) => {
       e.preventDefault();
       const deferredPrompt = e as any;
-      
-      toast({
-        title: "Install App",
-        description: "Install InsureGuard to your home screen for the best experience.",
-        action: (
-          <ToastAction altText="Install" onClick={() => deferredPrompt.prompt()}>
-            Install
-          </ToastAction>
-        ),
-      });
+
+      const lastPrompted = localStorage.getItem("lastInstallPrompt");
+      const now = new Date().getTime();
+      const oneDay = 24 * 60 * 60 * 1000;
+
+      if (!lastPrompted || now - parseInt(lastPrompted, 10) > oneDay) {
+        toast({
+          title: "Install App",
+          description: "Install InsureGuard to your home screen for the best experience.",
+          action: (
+            <ToastAction altText="Install" onClick={() => deferredPrompt.prompt()}>
+              Install
+            </ToastAction>
+          ),
+        });
+        localStorage.setItem("lastInstallPrompt", now.toString());
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handler);

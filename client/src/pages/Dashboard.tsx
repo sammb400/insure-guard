@@ -1,7 +1,7 @@
 import Layout from "@/components/Layout";
 import { useData, type DashboardStats } from "@/lib/DataContext";
 import { StatsCard } from "@/components/StatsCard";
-import { Users, FileText, DollarSign, AlertCircle, TrendingUp } from "lucide-react";
+import { Users, FileText, DollarSign, AlertCircle, TrendingUp, CreditCard } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/StatusBadge";
 import { format } from "date-fns";
@@ -56,7 +56,16 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
 
   const expiringPolicies = policies
-    .filter(p => new Date(p.expirationDate) > new Date() && new Date(p.expirationDate) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000))
+    .filter(p => new Date(p.expirationDate) > new Date() && new Date(p.expirationDate) < new Date(Date.now() + 60 * 24 * 60 * 60 * 1000))
+    .slice(0, 5);
+
+  const installmentPolicies = policies
+    .filter(p => {
+      const start = new Date(p.startDate);
+      const end = new Date(p.expirationDate);
+      const durationDays = (end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24);
+      return durationDays <= 45 && p.status === 'active';
+    })
     .slice(0, 5);
 
   return (
@@ -67,16 +76,18 @@ export default function Dashboard() {
           <p className="mt-2 text-muted-foreground">Overview of your agency's performance and alerts.</p>
         </div>
 
-        {isLoading ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
+          <div className="col-span-full order-2 md:order-1">
+            {isLoading ? (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+                {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-32 rounded-xl" />)}
+              </div>
+            ) : (
+              <StatsGrid stats={stats} />
+            )}
           </div>
-        ) : (
-          <StatsGrid stats={stats} />
-        )}
 
-        <div className="grid gap-6 md:grid-cols-7">
-          <Card className="col-span-4 shadow-md border-border/60">
+          <Card className="md:col-span-2 lg:col-span-3 shadow-md border-border/60 order-3 md:order-3">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <TrendingUp className="h-5 w-5 text-primary" />
@@ -110,7 +121,48 @@ export default function Dashboard() {
             </CardContent>
           </Card>
 
-          <Card className="col-span-3 border-amber-200 bg-amber-50/50 dark:bg-amber-950/10 dark:border-amber-900/50">
+          <div className="md:col-span-2 lg:col-span-4 flex flex-wrap gap-6 order-1 md:order-2">
+          <Card className="flex-1 min-w-[280px] border-blue-200 bg-blue-50/50 dark:bg-blue-950/10 dark:border-blue-900/50">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-500">
+                <CreditCard className="h-5 w-5" />
+                Partially Paid
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {installmentPolicies.map((policy) => (
+                    <div 
+                      key={policy.id} 
+                      className="flex items-center justify-between rounded-lg bg-white p-3 shadow-sm dark:bg-slate-900 cursor-pointer hover:bg-white/80 dark:hover:bg-slate-800 transition-colors"
+                      onClick={() => setLocation(`/policies?policyId=${policy.id}`)}
+                    >
+                      <div className="space-y-1">
+                        <p className="font-medium text-sm">{policy.policyNumber}</p>
+                        <p className="text-xs text-muted-foreground">{policy.carrier}</p>
+                      </div>
+                      <div className="text-right text-sm">
+                        <p className="font-medium">Kes{Number(policy.premium).toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">Instalment</p>
+                      </div>
+                    </div>
+                  ))}
+                  {installmentPolicies.length === 0 && (
+                    <div className="flex h-32 flex-col items-center justify-center text-center text-muted-foreground">
+                      <p>No partially paid policies.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="flex-1 min-w-[280px] border-amber-200 bg-amber-50/50 dark:bg-amber-950/10 dark:border-amber-900/50">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-amber-800 dark:text-amber-500">
                 <AlertCircle className="h-5 w-5" />
@@ -151,6 +203,7 @@ export default function Dashboard() {
               )}
             </CardContent>
           </Card>
+          </div>
         </div>
       </div>
     </Layout>

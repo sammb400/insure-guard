@@ -1,6 +1,5 @@
 import Layout from "@/components/Layout";
 import { useData } from "@/lib/DataContext";
-import { CreatePolicyDialog } from "@/components/CreatePolicyDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PolicyDetailsDialog } from "@/components/PolicyDetailsDialog";
 import { Input } from "@/components/ui/input";
@@ -17,6 +16,21 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +53,198 @@ const PolicyIcon = ({ type }: { type: string }) => {
     default: return <Activity className="h-4 w-4" />;
   }
 };
+
+function CreatePolicyDialog({ open: controlledOpen, onOpenChange: setControlledOpen, policy }: { open?: boolean; onOpenChange?: (open: boolean) => void; policy?: Policy }) {
+  const { addPolicy, updatePolicy, clients } = useData();
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isControlled = controlledOpen !== undefined;
+  const open = isControlled ? controlledOpen : internalOpen;
+  const setOpen = isControlled ? setControlledOpen : setInternalOpen;
+
+  const [formData, setFormData] = useState({
+    policyNumber: "",
+    carrier: "",
+    type: "Auto",
+    premium: "",
+    startDate: new Date().toISOString().split('T')[0],
+    expirationDate: "",
+    clientId: "",
+    status: "active"
+  });
+  const [paymentType, setPaymentType] = useState("full");
+
+  useEffect(() => {
+    if (open) {
+      if (policy) {
+        setFormData({
+          policyNumber: policy.policyNumber,
+          carrier: policy.carrier,
+          type: policy.type,
+          premium: policy.premium.toString(),
+          startDate: policy.startDate.split('T')[0],
+          expirationDate: policy.expirationDate.split('T')[0],
+          clientId: policy.clientId,
+          status: policy.status
+        });
+        setPaymentType("full");
+      } else {
+        setFormData({
+          policyNumber: "",
+          carrier: "",
+          type: "Auto",
+          premium: "",
+          startDate: new Date().toISOString().split('T')[0],
+          expirationDate: "",
+          clientId: "",
+          status: "active"
+        });
+        setPaymentType("full");
+      }
+    }
+  }, [open, policy]);
+
+  useEffect(() => {
+    if (!policy && formData.startDate) {
+      const start = new Date(formData.startDate);
+      const exp = new Date(start);
+      if (paymentType === "installments") {
+        exp.setMonth(exp.getMonth() + 1);
+      } else {
+        exp.setFullYear(exp.getFullYear() + 1);
+      }
+      setFormData(prev => ({ ...prev, expirationDate: exp.toISOString().split('T')[0] }));
+    }
+  }, [paymentType, formData.startDate, policy]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const data = {
+      ...formData,
+      premium: parseFloat(formData.premium),
+      startDate: new Date(formData.startDate).toISOString(),
+      expirationDate: new Date(formData.expirationDate).toISOString(),
+    };
+
+    if (policy) {
+      await updatePolicy(policy.id, data);
+    } else {
+      await addPolicy(data);
+    }
+    if (setOpen) {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      {!isControlled && (
+        <DialogTrigger asChild>
+          <Button>Create Policy</Button>
+        </DialogTrigger>
+      )}
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto !fixed !left-[50%] !top-[50%] !translate-x-[-50%] !translate-y-[-50%] z-50">
+        <DialogHeader>
+          <DialogTitle>{policy ? "Edit Policy" : "Create Policy"}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="policyNumber">Policy Number</Label>
+              <Input id="policyNumber" required value={formData.policyNumber} onChange={e => setFormData({...formData, policyNumber: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="carrier">Carrier</Label>
+              <Input id="carrier" required value={formData.carrier} onChange={e => setFormData({...formData, carrier: e.target.value})} />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="type">Type</Label>
+              <Select value={formData.type} onValueChange={v => setFormData({...formData, type: v})}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Auto">Auto</SelectItem>
+                  <SelectItem value="Home">Home</SelectItem>
+                  <SelectItem value="Life">Life</SelectItem>
+                  <SelectItem value="Health">Health</SelectItem>
+                  <SelectItem value="Business">Business</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="premium">Premium</Label>
+              <Input id="premium" type="number" required value={formData.premium} onChange={e => setFormData({...formData, premium: e.target.value})} />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="client">Client</Label>
+            <Select value={formData.clientId} onValueChange={v => setFormData({...formData, clientId: v})}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select client" />
+              </SelectTrigger>
+              <SelectContent>
+                {clients?.map(client => (
+                  <SelectItem key={client.id} value={client.id}>{client.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {!policy && (
+            <div className="space-y-3 border rounded-md p-3 bg-muted/20">
+              <Label>Payment Terms</Label>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="radio" 
+                    id="full" 
+                    name="paymentType" 
+                    value="full" 
+                    checked={paymentType === "full"} 
+                    onChange={() => setPaymentType("full")}
+                    className="h-4 w-4 border-primary text-primary focus:ring-primary"
+                  />
+                  <Label htmlFor="full" className="font-normal">Pay in Full (1 Year Coverage)</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="radio" 
+                    id="installments" 
+                    name="paymentType" 
+                    value="installments" 
+                    checked={paymentType === "installments"} 
+                    onChange={() => setPaymentType("installments")}
+                    className="h-4 w-4 border-primary text-primary focus:ring-primary"
+                  />
+                  <Label htmlFor="installments" className="font-normal">Pay with Instalments (1 Month Coverage)</Label>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="startDate">Start Date</Label>
+              <Input id="startDate" type="date" required value={formData.startDate} onChange={e => setFormData({...formData, startDate: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expirationDate">Expiration Date</Label>
+              <Input id="expirationDate" type="date" required value={formData.expirationDate} onChange={e => setFormData({...formData, expirationDate: e.target.value})} />
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-4">
+            <Button type="submit">Save Policy</Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export default function Policies() {
   const search = useSearch();
@@ -69,7 +275,7 @@ export default function Policies() {
     const matchesType = typeFilter === "all" || policy.type === typeFilter;
     const matchesStatus = statusFilter === "all" || policy.status === statusFilter;
     return matchesSearch && matchesType && matchesStatus;
-  });
+  })?.sort((a, b) => new Date(a.expirationDate).getTime() - new Date(b.expirationDate).getTime());
 
   const handleDelete = async () => {
     if (policyToDelete) {
